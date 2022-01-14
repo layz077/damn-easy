@@ -51,6 +51,7 @@ public class WebService implements web{
     private PostsRepository postsRepository;
     @Autowired
     private PostDetailsRepository postDetailsRepository;
+    private mailingService mail = new mailingService();
 
 
     private final PhoneCheck phoneCheck = new PhoneCheck();
@@ -76,16 +77,28 @@ public class WebService implements web{
                            user.setPhoneNumber(input.getPhoneNumber());
 
                            // Creating UserName
-                           String userName = input.getEmail().substring(0,input.getEmail().indexOf("@")) + "@"+ input.getPhoneNumber().substring(0,5);
+                           String userName = input.getEmail()
+                        		                             .substring(0,input.getEmail().indexOf("@")) + "@"+ input.getPhoneNumber()
+                        		                             .substring(0,5);
                            user.setUserName(userName);
                            
                            // Encoding the password
-                           String password = securityConfig.passwordEncoder().encode(input.getPassword());
+                           String password = securityConfig
+                        		                           .passwordEncoder()
+                        		                           .encode(input.getPassword());
                            user.setPassword(password);
                            System.out.println(password);
                            
                            // Saving to Database
                            userRepository.save(user);
+                           
+                           try {
+                        	   mail.sendMail(input.getEmail(), input.getName(), userName, "register" ,request);
+                           } 
+                           catch(Exception e) {
+                        	   e.printStackTrace();
+                           }
+                           
 
                        }
                        else {

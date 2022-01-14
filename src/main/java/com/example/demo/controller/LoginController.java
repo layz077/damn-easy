@@ -2,6 +2,9 @@ package com.example.demo.controller;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
 import org.json.JSONObject;
 import org.jboss.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.entity.User;
+import com.example.demo.implementation.mailingService;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.securityConfig.SecurityConfig;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -30,9 +34,10 @@ public class LoginController {
 	
 	@Autowired
 	private SecurityConfig securityConfig;
+	private mailingService mailingService = new mailingService();
 
 	@PostMapping(value = "/user/login", consumes ="application/json",produces="application/json")
-	 public ResponseEntity<?> login(@RequestBody String input) throws Exception{
+	 public ResponseEntity<?> login(@RequestBody String input,HttpServletRequest request) throws Exception{
 
         User user = objectMapper.readValue(input, User.class);
 //        JSONObject json = new JSONObject();
@@ -40,23 +45,21 @@ public class LoginController {
         logger.info(user);
         
         long id = user.getId();
+        
         String fromDb = userRepository.getHash(id);
         String password = user.getPassword();
         
         boolean isPresent = securityConfig.passwordEncoder().matches(password, fromDb);
         
-        if(isPresent) return ResponseEntity.status(HttpStatus.OK).body("Success");
-        
-        
-//        if(userRepository.getUser(userName, password) == null) {
-//        	
-////        	return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(json.put("message", "Enter a valid username or password"));
-//        	return ResponseEntity.status(HttpStatus.OK).body("no");
-//        }
-        
-//       json.put("message", "Logged in sucessfully");
-//       json.put("Privilege", "Normal user");
-        
+        if(isPresent) {
+
+            String email = userRepository.getEmail(id);
+            userRepository.setLastIp(request.getRemoteAddr(), id);
+        	
+        	mailingService.sendMail(email,"","","login",request);
+        	return ResponseEntity.status(HttpStatus.OK).body("Success");
+        }
+                
 		
 		return ResponseEntity.status(HttpStatus.OK).body("Enter a valid username or password");
 	 }

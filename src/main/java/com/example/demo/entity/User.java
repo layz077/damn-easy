@@ -26,4 +26,6 @@ public class User {
     private String password;
     @Column(name="phone_number")
     private String phoneNumber;
+    @Column(name="last_login_ip")
+    private String lastLoginIp;
 }
