@@ -17,9 +17,18 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 	
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
-	     http       //other configure params.
-	         .csrf().disable();
+		
+	     http.authorizeRequests()
+	         .antMatchers("/public/**").permitAll()
+	     	 .antMatchers("/user/**").hasRole("USER")
+	     	 .antMatchers("/admin/**").hasRole("ADMIN")
+	         .anyRequest()
+	         .authenticated();
+	         
+	     http.csrf().disable();
 	}
+	
+
 
 	@Bean
 	public PasswordEncoder passwordEncoder() {

@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.sql.Date;
+
 import org.hibernate.validator.constraints.Range;
 import org.jetbrains.annotations.NotNull;
 

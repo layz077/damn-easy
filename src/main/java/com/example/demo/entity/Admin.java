@@ -13,8 +13,8 @@ import javax.persistence.*;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "user")
-public class User {
+@Table(name = "admin")
+public class Admin {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -33,7 +33,7 @@ public class User {
     @Column(name="created_on")
     private Date createdOn;
     @Column(name="updated_on")
-    private Date updatedOn;  
-    @Column(name = "is_active")
-    private boolean isActive;
+    private Date updatedOn;
+    @Column(name="created_by")
+    private long createdBy;
 }

@@ -8,11 +8,17 @@ import com.example.demo.repository.PostsRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.securityConfig.SecurityConfig;
 import com.fasterxml.jackson.databind.deser.DataFormatReaders;
+
+import org.jboss.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.web.format.DateTimeFormatters;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
+import java.sql.Date;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -56,10 +62,15 @@ public class WebService implements web{
 
     private final PhoneCheck phoneCheck = new PhoneCheck();
     private final NameCheck nameCheck = new NameCheck();
+//    private LocalDate dateTime = LocalDate.now();
+//    private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
 
+	private final static Logger logger = Logger.getLogger(WebService.class);
+	
     public String registration(RegistrationDto input,HttpServletRequest request){
+    	
 
-        System.out.println(request.getRemoteAddr());
+        logger.info(request.getRemoteAddr());
     	
         if(input.getName().length()==0 || input.getEmail().length()==0 || input.getPassword().length()==0){
             return "Name (or) email (or) password cannot be empty";
@@ -87,7 +98,13 @@ public class WebService implements web{
                         		                           .passwordEncoder()
                         		                           .encode(input.getPassword());
                            user.setPassword(password);
-                           System.out.println(password);
+                           logger.info(password);
+                           
+                           // String -> SQL date
+                           
+                           Date date  = Date.valueOf(LocalDate.now());
+                           user.setCreatedOn(date);
+                           user.setActive(true);
                            
                            // Saving to Database
                            userRepository.save(user);
