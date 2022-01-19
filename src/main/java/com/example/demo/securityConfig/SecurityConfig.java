@@ -41,11 +41,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 	         .formLogin()
 //	         .loginPage("/signin")
 	         .failureUrl("/login?error=true")
-	         .loginProcessingUrl("/verifyUser")
-	         .defaultSuccessUrl("/home?login=success")
-//	         .successHandler(loginSuccessHandler);
+//	         .loginProcessingUrl("/verifyUser") 
+//	         .defaultSuccessUrl("/home?login=success")
+	         .successHandler(loginSuccessHandler);
 	         ;
-//	     http.csrf().disable();
+	     http.csrf().disable();
 	       
 	     
 	}
