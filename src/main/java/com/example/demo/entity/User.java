@@ -18,13 +18,16 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
+    @Column(name = "user_id")
+    private long userId;
     @NotNull
     private String name;
-    @Column(name = "user_name")
+    @Column(name = "username")
     private String userName;
+    @Column(name = "email")
     private String email;
     @NotNull
+    @Column(name = "password")
     private String password;
     @Column(name="phone_number")
     private String phoneNumber;
@@ -34,6 +37,6 @@ public class User {
     private Date createdOn;
     @Column(name="updated_on")
     private Date updatedOn;  
-    @Column(name = "is_active")
-    private boolean isActive;
+    @Column(name = "enabled")
+    private boolean enabled;
 }

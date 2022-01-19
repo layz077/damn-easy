@@ -17,7 +17,7 @@ public class Controller {
     @Autowired
     private WebService webService;
 
-    @PostMapping("/user/register")
+    @PostMapping("/register")
     public String register(@RequestBody @Valid RegistrationDto user, HttpServletRequest httpRequest){
         return webService.registration(user,httpRequest);
     }

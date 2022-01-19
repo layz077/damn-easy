@@ -44,7 +44,7 @@ public class LoginController {
         
         logger.info(user);
         
-        long id = user.getId();
+        long id = user.getUserId();
         
         String fromDb = userRepository.getHash(id);
         String password = user.getPassword();

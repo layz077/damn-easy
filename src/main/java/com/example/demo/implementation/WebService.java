@@ -1,11 +1,13 @@
 package com.example.demo.implementation;
 
 import com.example.demo.dtos.RegistrationDto;
+import com.example.demo.entity.Authorities;
 import com.example.demo.entity.Posts;
 import com.example.demo.entity.User;
 import com.example.demo.repository.PostDetailsRepository;
 import com.example.demo.repository.PostsRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.repository.UserRoleRepository;
 import com.example.demo.securityConfig.SecurityConfig;
 import com.fasterxml.jackson.databind.deser.DataFormatReaders;
 
@@ -19,6 +21,8 @@ import org.springframework.stereotype.Service;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -48,7 +52,8 @@ class NameCheck{
 @Component
 public class WebService implements web{
 
-    private final User user = new User();
+    private User user = new User();
+    private Authorities user_roles = new Authorities();
     @Autowired
     private SecurityConfig securityConfig;
     @Autowired
@@ -57,6 +62,10 @@ public class WebService implements web{
     private PostsRepository postsRepository;
     @Autowired
     private PostDetailsRepository postDetailsRepository;
+    
+    @Autowired
+    private UserRoleRepository userRoleRepository;
+    
     private mailingService mail = new mailingService();
 
 
@@ -104,10 +113,13 @@ public class WebService implements web{
                            
                            Date date  = Date.valueOf(LocalDate.now());
                            user.setCreatedOn(date);
-                           user.setActive(true);
+                           user.setEnabled(true);
+                           user_roles.setUsername(userName);
+                           user_roles.setRoleName("ROLE_USER");                           
                            
                            // Saving to Database
                            userRepository.save(user);
+                           userRoleRepository.save(user_roles);
                            
                            try {
                         	   mail.sendMail(input.getEmail(), input.getName(), userName, "register" ,request);

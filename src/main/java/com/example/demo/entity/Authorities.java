@@ -1,6 +1,8 @@
 package com.example.demo.entity;
 
 import java.sql.Date;
+import java.util.List;
+import java.util.Set;
 
 import javax.management.relation.Role;
 import javax.persistence.Column;
@@ -20,12 +22,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "user_roles")
-public class UserRoles {
+public class Authorities {
 
 	@Id
-	@Column(name="user_id")
-	private long userId;
-	@Column(name="role_id")
-	private long role_id;
+	@Column(name="username")
+	private String username;
+	@Column(name="rolename")
+	private String roleName;
 	
 }

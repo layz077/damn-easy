@@ -14,7 +14,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @SpringBootApplication(exclude = { SecurityAutoConfiguration.class })
 @EnableAutoConfiguration(exclude = {SecurityAutoConfiguration.class})
 @EnableJpaRepositories("com.example.demo.repository")
-@ComponentScan({"com.example.demo.repository","com.example.demo.implementation","com.example.demo.controller","com.example.demo.securityConfig"})
+@ComponentScan({"com.example.demo.repository","com.example.demo.implementation","com.example.demo.controller","com.example.demo.securityConfig","com.example.demo.auth"})
 @EntityScan({"com.example.demo.entity"})
 public class PlayerApplication {
 
