@@ -21,6 +21,11 @@ public class PublicControllers {
 		return "home";
 	}
 	
+	@GetMapping("/homeAdmin")
+	public String homeAdmin() {
+		return "homeAdmin";
+	}
+	
 	@GetMapping("/signin")
 	public String signin() {
 		return "signin";

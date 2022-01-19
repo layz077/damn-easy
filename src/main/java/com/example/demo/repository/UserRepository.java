@@ -27,6 +27,6 @@ public interface UserRepository extends JpaRepository<User,Long> {
 	@Query(value = "UPDATE user set last_login_ip=?1 WHERE id=?2", nativeQuery = true)
 	void setLastIp(String ip,long id);
 	
-	@Query(value = "SELECT * FROM user WHERE user_name=?1", nativeQuery = true)
-	User loadUserByUserName(@Param("user_name") String username);
+	@Query(value = "select * from user where username=?1", nativeQuery = true)
+	User findByUserName(@Param("username") String username);
 }

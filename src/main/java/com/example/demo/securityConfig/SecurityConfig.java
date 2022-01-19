@@ -24,43 +24,50 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 	@Autowired
 	private UserDetailsService userDetailsService;
 	@Autowired
-	private DataSource dataSource;
+	private DataSource dataSource; 
+	@Autowired
+	private LoginSuccessHandler loginSuccessHandler;
 	
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
 		
 	     http.authorizeRequests()
 	         .antMatchers("/signin","/register","/").permitAll()
-	         .antMatchers("/home").hasAuthority("ROLE_ADMIN")
+	         .antMatchers("/home").hasAuthority("ROLE_USER")
+	         .antMatchers("/homeAdmin").hasAuthority("ROLE_ADMIN")
 	         .anyRequest()
 	         .authenticated()
 	         .and()
 	         .formLogin()
 //	         .loginPage("/signin")
+	         .failureUrl("/login?error=true")
 	         .loginProcessingUrl("/verifyUser")
-	         .defaultSuccessUrl("/signin?success");
+	         .defaultSuccessUrl("/home?login=success")
+//	         .successHandler(loginSuccessHandler);
 	         ;
-	     http.csrf().disable();
+//	     http.csrf().disable();
+	       
+	     
 	}
 	
 
-//	AuthenticationProvider authenticationProvider() {
-//		DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-//		provider.setUserDetailsService(userDetailsService);
-//		provider.setPasswordEncoder(new BCryptPasswordEncoder());
-//		return provider;
-//	}
+	AuthenticationProvider authenticationProvider() {
+		DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+		provider.setUserDetailsService(userDetailsService);
+		provider.setPasswordEncoder(new BCryptPasswordEncoder());
+		return provider;
+	}
 
 	@Bean
 	public PasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder();
 	}
 	
-	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-		auth.jdbcAuthentication()
-		                         .dataSource(dataSource)
-		                         .passwordEncoder(new BCryptPasswordEncoder())
-	                             .usersByUsernameQuery("SELECT username,password,enabled from user where username=?")
-	                             .authoritiesByUsernameQuery("SELECT username,rolename from user_roles where username=?");
-	}
+//	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+//		auth.jdbcAuthentication()
+//		                         .dataSource(dataSource)
+//		                         .passwordEncoder(new BCryptPasswordEncoder())
+//	                             .usersByUsernameQuery("SELECT username,password,enabled from user where username=?")
+//	                             .authoritiesByUsernameQuery("SELECT username,rolename from user_roles where username=?");
+//	}
 }
