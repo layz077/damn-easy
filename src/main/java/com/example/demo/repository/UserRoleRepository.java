@@ -11,6 +11,6 @@ import com.example.demo.entity.Authorities;
 @Repository
 public interface UserRoleRepository extends JpaRepository<Authorities, String> {
 
-	@Query(value = "select rolename from user_roles where username=?1", nativeQuery = true)
-	String getRole(String username);
+	@Query(value = "select rolename from user_roles where phonenumber=?1", nativeQuery = true)
+	String getRole(String phonenumber);
 }

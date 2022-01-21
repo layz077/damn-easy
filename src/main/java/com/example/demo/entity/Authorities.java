@@ -25,8 +25,8 @@ import lombok.NoArgsConstructor;
 public class Authorities {
 
 	@Id
-	@Column(name="username")
-	private String username;
+	@Column(name="phonenumber")
+	private String phonenumber;
 	@Column(name="rolename")
 	private String roleName;
 	

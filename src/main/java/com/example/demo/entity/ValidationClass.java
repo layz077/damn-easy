@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ValidationClass {
 
-	private String username;
+	private String phonenumber;
 	private String password;
 	private boolean enabled;
 	private String role;

@@ -26,9 +26,9 @@ public class PublicControllers {
 		return "homeAdmin";
 	}
 	
-	@GetMapping("/signin")
+	@GetMapping("/login")
 	public String signin() {
-		return "signin";
+		return "login";
 	}
 
 	// new ModelAndView("home.html");

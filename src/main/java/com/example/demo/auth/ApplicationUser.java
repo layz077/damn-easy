@@ -33,7 +33,7 @@ import
 		  
 		  @Override public Collection<? extends GrantedAuthority> getAuthorities() {
 		  
-				  logger.info(validationClass.getUsername()); 
+				  logger.info(validationClass.getPhonenumber()); 
 				  List<SimpleGrantedAuthority> authorities = new ArrayList<>();
 				  
 				  authorities.add(new SimpleGrantedAuthority(validationClass.getRole())); 
@@ -44,7 +44,7 @@ import
 		  
 		  @Override public String getPassword() { return validationClass.getPassword(); }
 		  
-		  @Override public String getUsername() { return validationClass.getUsername(); }
+		  @Override public String getUsername() { return validationClass.getPhonenumber(); }
 		  
 		  @Override public boolean isAccountNonExpired() { return true; }
 		  

@@ -18,18 +18,18 @@ import com.example.demo.repository.UserRoleRepository;
   @Autowired private UserRoleRepository userRoleRepository;
   
   @Override 
-  public UserDetails loadUserByUsername(String username) throws  UsernameNotFoundException {
+  public UserDetails loadUserByUsername(String phonenumber) throws  UsernameNotFoundException {
 	  
 	  ValidationClass validationClass = new ValidationClass();
 	  User user = new User();
 	  
 	  
-	  if(userRepository.findByUserName(username)== null) {throw new  UsernameNotFoundException("User " + username +" Not Found");}
+	  if(userRepository.findByUserName(phonenumber)== null) {throw new  UsernameNotFoundException("User " + phonenumber +" Not Found");}
 	  
-	  user = userRepository.findByUserName(username);
-	  String role = userRoleRepository.getRole(username);
+	  user = userRepository.findByUserName(phonenumber);
+	  String role = userRoleRepository.getRole(phonenumber);
 	  
-	  validationClass.setUsername(username);
+	  validationClass.setPhonenumber(phonenumber);
 	  validationClass.setPassword(user.getPassword());
 	  validationClass.setEnabled(user.isEnabled());
 	  validationClass.setRole(role);

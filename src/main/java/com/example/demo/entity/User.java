@@ -29,7 +29,7 @@ public class User {
     @NotNull
     @Column(name = "password")
     private String password;
-    @Column(name="phone_number")
+    @Column(name="phonenumber")
     private String phoneNumber;
     @Column(name="last_login_ip")
     private String lastLoginIp;

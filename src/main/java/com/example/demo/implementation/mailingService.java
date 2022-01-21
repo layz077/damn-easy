@@ -17,8 +17,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class mailingService {
 	
-	private static final String companyEmail = "srvkmr080@gmail.com";
-	private static final String password = "Electronic@1";
+	private static final String companyEmail = "******";
+	private static final String password = "*****";
 	private static final String host = "smtp.gmail.com";
 	private static final String port = "465";
 	private String subject;

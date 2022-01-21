@@ -87,11 +87,12 @@ public class WebService implements web{
         else {
                if(!nameCheck.isValid(input.getName())) return "Special characters or number not allowed in name";
                else {
-                   if(!phoneCheck.isValid(input.getPhoneNumber()) || input.getPhoneNumber() == null)  return "Enter a valid phone number";
+                   if(!phoneCheck.isValid(input.getPhoneNumber()) || input.getPhoneNumber() == null || input.getPhoneNumber().length() != 10)  return "Enter a valid phone number";
                    else {
                        if(input.getEmail().endsWith("@gmail.com") || input.getEmail().endsWith("@outlook.com") || input.getEmail().endsWith("@yahoo.com") ) {
                     	   if(input.getPassword().equals(null)) return "You must enter a password";
                     	   if(userRepository.getByPhone(input.getPhoneNumber()) != null) return "Phone number already present";
+                    	   if(userRepository.getByEmail(input.getEmail()) != null) return "Email already present";
                            user.setName(input.getName());
                            user.setEmail(input.getEmail());
                            user.setPhoneNumber(input.getPhoneNumber());
@@ -114,12 +115,15 @@ public class WebService implements web{
                            Date date  = Date.valueOf(LocalDate.now());
                            user.setCreatedOn(date);
                            user.setEnabled(true);
-                           user_roles.setUsername(userName);
+                           userRepository.saveAndFlush(user);
+                           
+                           
+                           user_roles.setPhonenumber(input.getPhoneNumber());
                            user_roles.setRoleName("ROLE_USER");                           
                            
                            // Saving to Database
-                           userRepository.save(user);
-                           userRoleRepository.save(user_roles);
+                           
+                           userRoleRepository.saveAndFlush(user_roles);
                            
                            try {
                         	   mail.sendMail(input.getEmail(), input.getName(), userName, "register" ,request);
