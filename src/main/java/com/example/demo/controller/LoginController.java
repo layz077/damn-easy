@@ -44,20 +44,22 @@ public class LoginController {
         
         logger.info(user);
         
-        long id = user.getUserId();
+        String phoneNumber = user.getPhoneNumber();
         
-        String fromDb = userRepository.getHash(id);
+        String fromDb = userRepository.getHash(phoneNumber);
         String password = user.getPassword();
         
         boolean isPresent = securityConfig.passwordEncoder().matches(password, fromDb);
         
+        if(!userRepository.getActive(phoneNumber)) return ResponseEntity.status(HttpStatus.OK).body("User in active / deleted");
         if(isPresent) {
 
-            String email = userRepository.getEmail(id);
-            userRepository.setLastIp(request.getRemoteAddr(), id);
+        	String emailId = userRepository.getEmail(phoneNumber);
+        	userRepository.deleteAccount(false, true, phoneNumber);
+            userRepository.setLastIp(request.getRemoteAddr(), phoneNumber);
         	
-        	mailingService.sendMail(email,"","","login",request);
-        	return ResponseEntity.status(HttpStatus.OK).body("Success");
+        	mailingService.sendMail(emailId,"","","login",request);
+        	return ResponseEntity.status(HttpStatus.OK).body("Logged in");
         }
                 
 		

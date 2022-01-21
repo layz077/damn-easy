@@ -12,17 +12,19 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.servlet.http.HttpServletRequest;
 
+import org.jboss.logging.Logger;
 import org.springframework.stereotype.Service;
 
 @Service
 public class mailingService {
 	
-	private static final String companyEmail = "******";
-	private static final String password = "*****";
+	private static final String companyEmail = "srvkmr080@gmail.com";
+	private static final String password = "Electronic@1";
 	private static final String host = "smtp.gmail.com";
 	private static final String port = "465";
 	private String subject;
 	private String message;
+	private static Logger logger = Logger.getLogger(mailingService.class);
 
 		/*TYPE
 		 * registration
@@ -48,6 +50,15 @@ public class mailingService {
 	        	  message = "There is a new sign in from ip "+request.getRemoteAddr()+".\nIf not you please change the password";
 	          }
 	          
+	          else if(type.equalsIgnoreCase("update")) {
+	        	  subject = "Profile Updated Successfully";
+	        	  message = "Your profile was updated successfully. If not done by you, to revert these changes click the below link";
+	          }
+	          
+	          else if(type.equalsIgnoreCase("password")) {
+	        	  subject = "Password Changed successfully";
+	        	  message = "Your profile password is changed successfully. If not done by you, to revert these changes click the below link";
+	          }
 	         
 	          Session session = Session.getInstance(properties, new Authenticator() {
 			
@@ -66,7 +77,8 @@ public class mailingService {
 				mimeMessage.setText(message);
 				
 				Transport.send(mimeMessage);
-				
+				logger.info("Email sent");
+								
 				
 			} catch (MessagingException e) {
 				// TODO Auto-generated catch block

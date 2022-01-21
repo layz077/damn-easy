@@ -39,4 +39,6 @@ public class User {
     private Date updatedOn;  
     @Column(name = "enabled")
     private boolean enabled;
+    @Column(name = "account_deleted")
+    private boolean deleted;
 }

@@ -1,15 +1,22 @@
 package com.example.demo.implementation;
 
 import com.example.demo.dtos.RegistrationDto;
+import com.example.demo.entity.AccountDeletionRequests;
 import com.example.demo.entity.Authorities;
+import com.example.demo.entity.PasswordChange;
 import com.example.demo.entity.Posts;
 import com.example.demo.entity.User;
+import com.example.demo.repository.AccountDeletionRequestsRepository;
 import com.example.demo.repository.PostDetailsRepository;
 import com.example.demo.repository.PostsRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.repository.UserRoleRepository;
 import com.example.demo.securityConfig.SecurityConfig;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.DataFormatReaders;
+import com.github.wnameless.json.flattener.JsonFlattener;
 
 import org.jboss.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +27,7 @@ import org.springframework.stereotype.Service;
 
 import java.sql.Date;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Set;
@@ -52,8 +60,6 @@ class NameCheck{
 @Component
 public class WebService implements web{
 
-    private User user = new User();
-    private Authorities user_roles = new Authorities();
     @Autowired
     private SecurityConfig securityConfig;
     @Autowired
@@ -62,9 +68,12 @@ public class WebService implements web{
     private PostsRepository postsRepository;
     @Autowired
     private PostDetailsRepository postDetailsRepository;
+    private ObjectMapper objectMapper = new ObjectMapper();
     
     @Autowired
     private UserRoleRepository userRoleRepository;
+    @Autowired
+    private AccountDeletionRequestsRepository accountDeletionRequestsRepository;
     
     private mailingService mail = new mailingService();
 
@@ -77,6 +86,10 @@ public class WebService implements web{
 	private final static Logger logger = Logger.getLogger(WebService.class);
 	
     public String registration(RegistrationDto input,HttpServletRequest request){
+    	
+
+        User user = new User();
+        Authorities user_roles = new Authorities();
     	
 
         logger.info(request.getRemoteAddr());
@@ -115,6 +128,7 @@ public class WebService implements web{
                            Date date  = Date.valueOf(LocalDate.now());
                            user.setCreatedOn(date);
                            user.setEnabled(true);
+                           user.setDeleted(false);
                            userRepository.saveAndFlush(user);
                            
                            
@@ -144,5 +158,170 @@ public class WebService implements web{
 
 
         return "Success";
+    }
+    
+    public String updateProf(String input, HttpServletRequest httpRequest) {
+		
+    	
+    	/*
+    	 * NAME and USERNAME
+    	 * In client side on the update form previous details will be there already.
+    	 * User will delete it and put new value which will come here.
+    	 * So, if he only changes password previous name will come (Nothing blank will come)
+    	 * */
+    	
+    	try {
+              User user = new User();
+        	
+    		
+    		try {
+    			user = objectMapper.readValue(input, User.class);
+    		} catch (JsonProcessingException e) {
+    			e.printStackTrace();
+    		} 	
+    		
+    		String phoneNumber = user.getPhoneNumber();
+        	String name = user.getName();
+        	String email = user.getEmail();
+        	Date updatedOn = Date.valueOf(LocalDate.now());
+    		
+    	
+	    	if(!email.equals(null) && !name.equals(null)) {
+	    		
+//	        	String username = user.getEmail()
+//								                .substring(0,user.getEmail().indexOf("@")) + "@"+ user.getPhoneNumber()
+//								                .substring(0,5);
+	    		
+	    		String username = user.getUserName();
+	        	
+	        	logger.info(username);
+	    		
+		    		if(nameCheck.isValid(name)) {
+		    			
+		    			if(username.equals(userRepository.getUsername(phoneNumber))){
+		    				
+		    				logger.info(userRepository.getUsername(phoneNumber));
+		    					    				
+		    				userRepository.updateNameOnly(name,updatedOn,phoneNumber);
+		    				mail.sendMail(email, name, "", "update", httpRequest);
+		    				return "Details updated successfully";
+		    				
+		    			}
+		    			else {
+		    				if(userRepository.ifUserNameAlreadyPresent(username)!= null) {
+		    					return "Username \""+ user.getUserName() +"\" already present.Please try another username";
+		    				}
+		    				else {
+		    					userRepository.updateNameAndUser(name,updatedOn,username, phoneNumber);
+			    				mail.sendMail(email, name, "", "update", httpRequest);
+			    				return "Details updated successfully";
+		    				}
+		    				
+		    			}
+		    			
+		        	}
+		        	else {
+		        		return "Please enter a valid name or phone number";
+		        	}
+	        	
+	    	}
+	    	else {
+	    		return "Fields cannot be null";
+	    	}
+    	}
+    	catch(Exception e) {
+    		e.printStackTrace();
+    		return "Some error occured while processing your request";
+    	}
+    	
+    }
+    
+    public String changePassword(String input) {
+	
+    	PasswordChange user = new PasswordChange();
+    	
+    	
+    	try {
+    		
+    		try {
+    			user = objectMapper.readValue(input, PasswordChange.class);
+    			logger.info("OLD --> "+user.getPreviousPassword());
+    			logger.info("NEW --> "+user.getNewPassword());
+    		} 
+        	catch (JsonProcessingException e) {
+    			e.printStackTrace();
+    		}    		
+    	
+    		   String fromDb = userRepository.getHash(user.getPhoneNumber());
+    		   
+    		   boolean matches = securityConfig.passwordEncoder().matches(user.getPreviousPassword(), fromDb);
+    		   logger.info(matches);
+    		   
+    		   if(matches) { 
+    			   
+    			   if(user.getPreviousPassword().equals(user.getNewPassword())) return "New password must be different";
+    			   
+    			   String newPassword = securityConfig.passwordEncoder().encode(user.getNewPassword());
+    			   userRepository.updatePassword(newPassword, user.getPhoneNumber());
+    			   mail.sendMail(userRepository.getEmail(user.getPhoneNumber()), "", "", "password", null);
+    			   return "Password changed successfully";
+    			   
+    		   }
+    		   else {
+    			   return "Enter correct password";
+    		   }
+    		 
+    	}
+    	catch(Exception e) {
+	    		e.printStackTrace();
+	    		return "Some error occured while processing your request";
+    	}
+		
+    }
+    
+    public String deleteUser(String input) {
+    	
+    	/*
+    	 * Deleted bit -> 0
+    	 * enabled -> 1
+    	 * So, that user can login and reactivate account.
+    	 * After 30 days enabled bit -> 0 automatically.
+    	 * */
+    	
+		Date date = Date.valueOf(LocalDate.now());
+		Date expiryDate = Date.valueOf(LocalDate.now().plusDays(30));
+		
+		AccountDeletionRequests user = new AccountDeletionRequests();	
+		
+		try {
+			
+			user = objectMapper.readValue(input, AccountDeletionRequests.class);
+			user.getMobileNumber();
+			
+			user.setDate(date);
+			user.setPermanentDeleteDate(expiryDate);
+			
+			logger.info(user.toString());
+			
+			
+			userRepository.deleteAccount(true,true,user.getMobileNumber());
+			accountDeletionRequestsRepository.saveAndFlush(user);
+			
+			return "Account deletion request proccessed successfully.\nTo reactivate your account just login to your account within 30 days.";
+			
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			return "Some error occured while processing your request";
+		}
+     
+    }
+    
+    public void autoDelete() {
+    	
+    	Date date = Date.valueOf(LocalDate.now());
+    	
+    	
+    	  
     }
 }
