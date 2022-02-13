@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service;
 public class mailingService {
 	
 	private static final String companyEmail = "******";
-	private static final String password = "******";
+	private static final String password = "*****";
 	private static final String host = "smtp.gmail.com";
 	private static final String port = "465";
 	private String subject;
@@ -47,7 +47,7 @@ public class mailingService {
 	          
 	          else if(type.equalsIgnoreCase("login")) {
 	        	  subject = "***New Sign In***";
-	        	  message = "There is a new sign in from ip "+request.getRemoteAddr()+".\nIf not you please change the password";
+	        	  message = "There is a new sign in from ip " + request.getRemoteAddr()+".\nIf not you please change the password";
 	          }
 	          
 	          else if(type.equalsIgnoreCase("update")) {
@@ -58,6 +58,18 @@ public class mailingService {
 	          else if(type.equalsIgnoreCase("password")) {
 	        	  subject = "Password Changed successfully";
 	        	  message = "Your profile password is changed successfully. If not done by you, to revert these changes click the below link";
+	          }
+	          else if(type.equalsIgnoreCase("deletion warning")) {
+	        	  subject = "DAILYSHOTS: END IS NEAR";
+	        	  message = "You have only one day before your account is permanently deleted.Click on the below link to reactivate your acount.\n"
+	        	  		  + "http://localhost:8080/recoverAccount?id=" + userName;
+	        	  
+	          }
+	          
+	          else if(type.equalsIgnoreCase("delete")) {
+	        	  subject = "ACCOUNT DELETED PERMANENTALY";
+	        	  message = "Sorry to see you go :( . Your details are now deleted from our server."
+	        			  +"You can use same details to sign up again";
 	          }
 	         
 	          Session session = Session.getInstance(properties, new Authenticator() {

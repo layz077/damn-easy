@@ -41,4 +41,6 @@ public class User {
     private boolean enabled;
     @Column(name = "account_deleted")
     private boolean deleted;
+    @Column(name="account_deleted_on")
+    private Date accountDeletedOn;
 }

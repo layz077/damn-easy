@@ -3,6 +3,7 @@ package com.example.demo.repository;
 import com.example.demo.entity.User;
 
 import java.sql.Date;
+import java.util.List;
 
 import javax.transaction.Transactional;
 
@@ -64,7 +65,17 @@ public interface UserRepository extends JpaRepository<User,Long> {
 	
 	@Modifying
 	@Transactional
-	@Query(value = "UPDATE user set account_deleted=?1,enabled=?2 WHERE phonenumber=?2", nativeQuery = true)
-	void deleteAccount(boolean deleted,boolean enabled,String phone);
+	@Query(value = "UPDATE user set account_deleted=true,enabled=false,account_deleted_on=?1 WHERE phonenumber=?2", nativeQuery = true)
+	void deleteAccount(Date date,String phone);
 
+	@Modifying
+	@Transactional
+	@Query(value = "UPDATE deletion_requests set account_deleted=?1,enabled=?2 WHERE phonenumber=?2", nativeQuery = true)
+	void addAccountToDeleteRequest(boolean deleted,boolean enabled,String phone);
+	
+	@Modifying
+	@Transactional
+	@Query(value = "UPDATE deletion_requests set account_deleted=false,enabled=true WHERE phonenumber=?1", nativeQuery = true)
+	void recoverAccount(String phone);
+	
 }

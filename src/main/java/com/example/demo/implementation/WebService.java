@@ -29,7 +29,9 @@ import java.sql.Date;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -304,7 +306,8 @@ public class WebService implements web{
 			logger.info(user.toString());
 			
 			
-			userRepository.deleteAccount(true,true,user.getMobileNumber());
+			// only change enable for now
+			userRepository.addAccountToDeleteRequest(true,true,user.getMobileNumber());
 			accountDeletionRequestsRepository.saveAndFlush(user);
 			
 			return "Account deletion request proccessed successfully.\nTo reactivate your account just login to your account within 30 days.";
@@ -319,9 +322,40 @@ public class WebService implements web{
     
     public void autoDelete() {
     	
-    	Date date = Date.valueOf(LocalDate.now());
+    	Date date = Date.valueOf(LocalDate.now().plusDays(1));
+    	
+    	List<String> usersToWarn = accountDeletionRequestsRepository.getDetails(date);
+    	logger.info(usersToWarn);
     	
     	
+    	usersToWarn.forEach(phone->{
+    		
+    		String email  =  userRepository.getEmail(phone);
+    		mail.sendMail(email, "", phone, "deletion warning", null);
+    		
+    	});
+    	
+    	Date dateDelete = Date.valueOf(LocalDate.now());
+    	
+    	List<String> usersToDelete = accountDeletionRequestsRepository.getDetails(dateDelete);
+    	logger.info(usersToDelete);
+    	
+    	usersToDelete.forEach(phone->{
+    		
+    		String email =  userRepository.getEmail(phone);
+    		mail.sendMail(email, "", phone, "delete", null);
+    		
+    		accountDeletionRequestsRepository.deleteEntry(dateDelete);
+        	userRepository.deleteAccount(dateDelete, phone);
+    	});
+    	
+    }    	
     	  
-    }
+    
+
+	public String followReq(String sender, String receiver) {
+		
+		return "";
+		
+	}
 }

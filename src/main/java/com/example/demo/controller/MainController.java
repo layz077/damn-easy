@@ -43,4 +43,9 @@ public class MainController {
     public void autoDeleteEveryDat() {
     	webService.autoDelete();
     }
+    
+    @PostMapping("/user/follow")
+    public String followRequets(String sender,String receiver) {
+    	return webService.followReq(sender,receiver);
+    }
 }

@@ -55,7 +55,7 @@ public class LoginController {
         if(isPresent) {
 
         	String emailId = userRepository.getEmail(phoneNumber);
-        	userRepository.deleteAccount(false, true, phoneNumber);
+        	userRepository.recoverAccount(phoneNumber);
             userRepository.setLastIp(request.getRemoteAddr(), phoneNumber);
         	
         	mailingService.sendMail(emailId,"","","login",request);

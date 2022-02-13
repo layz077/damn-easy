@@ -40,7 +40,6 @@ public class LoginSuccessHandler extends SavedRequestAwareAuthenticationSuccessH
 		    	
 		    }
 		    else if(role.equals("[ROLE_ADMIN]")) {
-		    	System.out.println("Correct");
 		    	redirectURL += "/homeAdmin";
 		    }
 		   
