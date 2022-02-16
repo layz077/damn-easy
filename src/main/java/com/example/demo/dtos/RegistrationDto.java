@@ -8,6 +8,7 @@ import java.sql.Date;
 
 import org.hibernate.validator.constraints.Range;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.web.multipart.MultipartFile;
 
 @Data
 @NoArgsConstructor
@@ -22,4 +23,5 @@ public class RegistrationDto {
     private String phoneNumber;
     @NotNull
     private String email;
+//    private MultipartFile file;
 }

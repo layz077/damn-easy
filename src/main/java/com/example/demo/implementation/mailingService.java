@@ -13,18 +13,21 @@ import javax.mail.internet.MimeMessage;
 import javax.servlet.http.HttpServletRequest;
 
 import org.jboss.logging.Logger;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 
 @Service
 public class mailingService {
-	
-	private static final String companyEmail = "******";
-	private static final String password = "*****";
-	private static final String host = "smtp.gmail.com";
-	private static final String port = "465";
+
+
+	private static final String companyEmail = "****";
+	private static final String password = "****";
+	private static final String host="smtp.gmail.com";
+	private static final String port="465";
 	private String subject;
 	private String message;
-	private static Logger logger = Logger.getLogger(mailingService.class);
+	private static final Logger logger = Logger.getLogger(mailingService.class);
 
 		/*TYPE
 		 * registration
@@ -62,15 +65,19 @@ public class mailingService {
 	          else if(type.equalsIgnoreCase("deletion warning")) {
 	        	  subject = "DAILYSHOTS: END IS NEAR";
 	        	  message = "You have only one day before your account is permanently deleted.Click on the below link to reactivate your acount.\n"
-	        	  		  + "http://localhost:8080/recoverAccount?id=" + userName;
+	        	  		  + "http://localhost:8080/recoverAccount/" + userName;
 	        	  
 	          }
 	          
 	          else if(type.equalsIgnoreCase("delete")) {
-	        	  subject = "ACCOUNT DELETED PERMANENTALY";
+	        	  subject = "ACCOUNT DELETED PERMANENTLY";
 	        	  message = "Sorry to see you go :( . Your details are now deleted from our server."
 	        			  +"You can use same details to sign up again";
 	          }
+			  else if(type.equalsIgnoreCase("login recover")) {
+				  subject = "Account recovered successfully";
+				  message = "Welcome back to our platform all your services are restored.";
+			  }
 	         
 	          Session session = Session.getInstance(properties, new Authenticator() {
 			

@@ -1,16 +1,8 @@
 package com.example.demo.implementation;
 
 import com.example.demo.dtos.RegistrationDto;
-import com.example.demo.entity.AccountDeletionRequests;
-import com.example.demo.entity.Authorities;
-import com.example.demo.entity.PasswordChange;
-import com.example.demo.entity.Posts;
-import com.example.demo.entity.User;
-import com.example.demo.repository.AccountDeletionRequestsRepository;
-import com.example.demo.repository.PostDetailsRepository;
-import com.example.demo.repository.PostsRepository;
-import com.example.demo.repository.UserRepository;
-import com.example.demo.repository.UserRoleRepository;
+import com.example.demo.entity.*;
+import com.example.demo.repository.*;
 import com.example.demo.securityConfig.SecurityConfig;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -22,20 +14,23 @@ import org.jboss.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.web.format.DateTimeFormatters;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+import org.thymeleaf.context.IContext;
 
+import java.awt.image.BufferedImage;
+import java.io.*;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.imageio.ImageIO;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 
@@ -70,6 +65,9 @@ public class WebService implements web{
     private PostsRepository postsRepository;
     @Autowired
     private PostDetailsRepository postDetailsRepository;
+	@Autowired
+	private ProfileRepository profileRepository;
+
     private ObjectMapper objectMapper = new ObjectMapper();
     
     @Autowired
@@ -87,79 +85,114 @@ public class WebService implements web{
 
 	private final static Logger logger = Logger.getLogger(WebService.class);
 	
-    public String registration(RegistrationDto input,HttpServletRequest request){
-    	
+    public String registration(MultipartFile file,String details, HttpServletRequest request){
 
-        User user = new User();
-        Authorities user_roles = new Authorities();
-    	
+    try {
 
-        logger.info(request.getRemoteAddr());
-    	
-        if(input.getName().length()==0 || input.getEmail().length()==0 || input.getPassword().length()==0){
-            return "Name (or) email (or) password cannot be empty";
-        }
-        else {
-               if(!nameCheck.isValid(input.getName())) return "Special characters or number not allowed in name";
-               else {
-                   if(!phoneCheck.isValid(input.getPhoneNumber()) || input.getPhoneNumber() == null || input.getPhoneNumber().length() != 10)  return "Enter a valid phone number";
-                   else {
-                       if(input.getEmail().endsWith("@gmail.com") || input.getEmail().endsWith("@outlook.com") || input.getEmail().endsWith("@yahoo.com") ) {
-                    	   if(input.getPassword().equals(null)) return "You must enter a password";
-                    	   if(userRepository.getByPhone(input.getPhoneNumber()) != null) return "Phone number already present";
-                    	   if(userRepository.getByEmail(input.getEmail()) != null) return "Email already present";
-                           user.setName(input.getName());
-                           user.setEmail(input.getEmail());
-                           user.setPhoneNumber(input.getPhoneNumber());
+		User input = null;
 
-                           // Creating UserName
-                           String userName = input.getEmail()
-                        		                             .substring(0,input.getEmail().indexOf("@")) + "@"+ input.getPhoneNumber()
-                        		                             .substring(0,5);
-                           user.setUserName(userName);
-                           
-                           // Encoding the password
-                           String password = securityConfig
-                        		                           .passwordEncoder()
-                        		                           .encode(input.getPassword());
-                           user.setPassword(password);
-                           logger.info(password);
-                           
-                           // String -> SQL date
-                           
-                           Date date  = Date.valueOf(LocalDate.now());
-                           user.setCreatedOn(date);
-                           user.setEnabled(true);
-                           user.setDeleted(false);
-                           userRepository.saveAndFlush(user);
-                           
-                           
-                           user_roles.setPhonenumber(input.getPhoneNumber());
-                           user_roles.setRoleName("ROLE_USER");                           
-                           
-                           // Saving to Database
-                           
-                           userRoleRepository.saveAndFlush(user_roles);
-                           
-                           try {
-                        	   mail.sendMail(input.getEmail(), input.getName(), userName, "register" ,request);
-                           } 
-                           catch(Exception e) {
-                        	   e.printStackTrace();
-                           }
-                           
+		try {
+			input = objectMapper.readValue(details, User.class);
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
 
-                       }
-                       else {
-                    	   return "Enter valid email id";
-                       }
-
-                   }
-               }
-        }
+		User user = new User();
+		Authorities user_roles = new Authorities();
 
 
-        return "Success";
+		logger.info(request.getRemoteAddr());
+
+		if (input.getName().length()==0 || input.getEmail().length() == 0 || input.getPassword().length() == 0) {
+			return "Name (or) email (or) password cannot be empty";
+		} else {
+			if (!nameCheck.isValid(input.getName())) return "Special characters or number not allowed in name";
+			else {
+				if (!phoneCheck.isValid(input.getPhoneNumber()) || input.getPhoneNumber() == null || input.getPhoneNumber().length() != 10)
+					return "Enter a valid phone number";
+				else {
+					if (input.getEmail().endsWith("@gmail.com") || input.getEmail().endsWith("@outlook.com") || input.getEmail().endsWith("@yahoo.com")) {
+						if (input.getPassword().equals(null)) return "You must enter a password";
+						if (userRepository.getByPhone(input.getPhoneNumber()) != null)
+							return "Phone number already present";
+						if (userRepository.getByEmail(input.getEmail()) != null) return "Email already present";
+						user.setName(input.getName());
+						user.setEmail(input.getEmail());
+						user.setPhoneNumber(input.getPhoneNumber());
+
+						// Creating UserName
+						String userName = input.getEmail()
+								.substring(0, input.getEmail().indexOf("@")) + "@" + input.getPhoneNumber()
+								.substring(0, 5);
+						user.setUserName(userName);
+
+						// Encoding the password
+						String password = securityConfig
+								.passwordEncoder()
+								.encode(input.getPassword());
+						user.setPassword(password);
+						logger.info(password);
+
+//						   if(!Objects.equals(multipartFile.getContentType(), "image/jpeg")){
+//							   return "Profile photo should be an image";
+//						   }
+
+
+						// String -> SQL date
+
+						Date date = Date.valueOf(LocalDate.now());
+						user.setCreatedOn(date);
+						user.setEnabled(true);
+						user.setDeleted(false);
+						user = userRepository.saveAndFlush(user);
+
+
+						// Image check and then insert
+
+						if (!file.isEmpty()) {
+
+							try {
+
+								BufferedImage bufferedImage = ImageIO.read(file.getInputStream());
+								ImageIO.write(bufferedImage, "png", new File("D:\\images\\" + userName + ".png"));
+
+
+								ProfilePhotos profile = new ProfilePhotos(user.getUserId(), "D:\\images\\" + userName + ".png");
+								profileRepository.saveAndFlush(profile);
+
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
+						}
+
+
+						user_roles.setPhonenumber(input.getPhoneNumber());
+						user_roles.setRoleName("ROLE_USER");
+
+						// Saving to Database
+
+						userRoleRepository.saveAndFlush(user_roles);
+
+						try {
+							mail.sendMail(input.getEmail(), input.getName(), userName, "register", request);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+
+
+					} else {
+						return "Enter valid email id";
+					}
+
+				}
+			}
+		}
+
+		return "Success";
+	}
+	catch (Exception e){
+		return "Some error occurred while processing";
+	}
     }
     
     public String updateProf(String input, HttpServletRequest httpRequest) {
@@ -199,31 +232,37 @@ public class WebService implements web{
 	        	logger.info(username);
 	    		
 		    		if(nameCheck.isValid(name)) {
-		    			
+
 		    			if(username.equals(userRepository.getUsername(phoneNumber))){
-		    				
+
 		    				logger.info(userRepository.getUsername(phoneNumber));
-		    					    				
+
 		    				userRepository.updateNameOnly(name,updatedOn,phoneNumber);
 		    				mail.sendMail(email, name, "", "update", httpRequest);
 		    				return "Details updated successfully";
-		    				
+
 		    			}
-		    			else {
-		    				if(userRepository.ifUserNameAlreadyPresent(username)!= null) {
-		    					return "Username \""+ user.getUserName() +"\" already present.Please try another username";
-		    				}
-		    				else {
-		    					userRepository.updateNameAndUser(name,updatedOn,username, phoneNumber);
-			    				mail.sendMail(email, name, "", "update", httpRequest);
-			    				return "Details updated successfully";
-		    				}
-		    				
+		    			else if (userRepository.ifUserNameAlreadyPresent(username) != null) {
+
+								boolean isDeleted = userRepository.getDeletedByUsername(username);
+								if (!isDeleted) {
+									return "Username \"" + user.getUserName() + "\" already present.Please try another username";
+								} else {
+									userRepository.updateNameAndUser(name, updatedOn, username, phoneNumber);
+									mail.sendMail(email, name, "", "update", httpRequest);
+									return "Details updated successfully";
+								}
+
 		    			}
+						else {
+							userRepository.updateNameAndUser(name, updatedOn, username, phoneNumber);
+							mail.sendMail(email, name, "", "update", httpRequest);
+							return "Details updated successfully";
+						}
 		    			
 		        	}
 		        	else {
-		        		return "Please enter a valid name or phone number";
+		        		return "Please enter a valid name";
 		        	}
 	        	
 	    	}
@@ -233,10 +272,10 @@ public class WebService implements web{
     	}
     	catch(Exception e) {
     		e.printStackTrace();
-    		return "Some error occured while processing your request";
+    		return "Some error occurred while processing your request";
     	}
-    	
-    }
+
+	}
     
     public String changePassword(String input) {
 	
@@ -276,7 +315,7 @@ public class WebService implements web{
     	}
     	catch(Exception e) {
 	    		e.printStackTrace();
-	    		return "Some error occured while processing your request";
+	    		return "Some error occurred while processing your request";
     	}
 		
     }
@@ -307,15 +346,16 @@ public class WebService implements web{
 			
 			
 			// only change enable for now
-			userRepository.addAccountToDeleteRequest(true,true,user.getMobileNumber());
+			if(accountDeletionRequestsRepository.getByPhone(user.getMobileNumber())!=null) return "Account already added to deletion request";
+			userRepository.addAccountToDeleteRequest(user.getMobileNumber());
 			accountDeletionRequestsRepository.saveAndFlush(user);
 			
-			return "Account deletion request proccessed successfully.\nTo reactivate your account just login to your account within 30 days.";
+			return "Account deletion request processed successfully.\nTo reactivate your account just login to your account within 30 days.";
 			
 		}
 		catch (Exception e) {
 			e.printStackTrace();
-			return "Some error occured while processing your request";
+			return "Some error occurred while processing your request";
 		}
      
     }
@@ -343,19 +383,51 @@ public class WebService implements web{
     	usersToDelete.forEach(phone->{
     		
     		String email =  userRepository.getEmail(phone);
-    		mail.sendMail(email, "", phone, "delete", null);
-    		
-    		accountDeletionRequestsRepository.deleteEntry(dateDelete);
+			mail.sendMail(email, "", phone, "delete", null);
+
+			accountDeletionRequestsRepository.deleteEntry(dateDelete);
         	userRepository.deleteAccount(dateDelete, phone);
     	});
     	
-    }    	
-    	  
-    
+    }
 
 	public String followReq(String sender, String receiver) {
-		
+
+
+
 		return "";
 		
+	}
+
+	public String recover(String id){
+
+		if(phoneCheck.isValid(id)){
+
+			String optionalAccountDeletionRequests = accountDeletionRequestsRepository.getByPhone(id);
+			logger.info(optionalAccountDeletionRequests);
+			if(optionalAccountDeletionRequests == null || optionalAccountDeletionRequests.length() ==0){
+				return "Enter a valid phone number";
+			}
+			accountDeletionRequestsRepository.deleteById(id);
+			userRepository.recoverAccount(id);
+			mail.sendMail(
+					userRepository.getEmail(id), "", "", "login recover", null);
+			return "Account recovered successfully";
+		}
+		else return "Bad input";
+	}
+
+	public String imageTest(MultipartFile file,String details) {
+
+		try {
+
+			BufferedImage bufferedImage = ImageIO.read(file.getInputStream());
+            ImageIO.write(bufferedImage,"png",new File("D:\\images\\photo1.png"));
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return "ok";
+
 	}
 }

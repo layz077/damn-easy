@@ -19,9 +19,9 @@ import lombok.NoArgsConstructor;
 public class FollowTable {
 	
 	@Id
-	@Column(name="follow_request_sender")
-	private String followRequestSender;
-	@Column(name="follow_request_receiver")
-	private String followRequestReceiver;
+	@Column(name="id")
+	private String id;
+	@Column(name="follower_id")
+	private String followerId;
 
 }

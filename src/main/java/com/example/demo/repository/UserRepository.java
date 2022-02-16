@@ -25,11 +25,14 @@ public interface UserRepository extends JpaRepository<User,Long> {
 	@Query(value = "SELECT username FROM user WHERE phonenumber=?1",nativeQuery = true)
 	String getUsername(String phone);
 	
-	@Query(value = "SELECT enabled FROM user WHERE phonenumber=?1",nativeQuery = true)
-	boolean getActive(String phone);
-	
 	@Query(value = "SELECT account_deleted FROM user WHERE phonenumber=?1",nativeQuery = true)
-	boolean getDeleted(String phone);
+	boolean getIsDeleted(String phone);
+
+	@Query(value = "SELECT enabled FROM user WHERE phonenumber=?1",nativeQuery = true)
+	boolean getIsActive(String phone);
+	
+	@Query(value = "SELECT account_deleted FROM user WHERE username=?1",nativeQuery = true)
+	boolean getDeletedByUsername(String username);
 	
 	@Query(value = "SELECT * FROM user WHERE phonenumber=?1", nativeQuery = true)
 	String getByPhone(String phoneNumber);
@@ -70,12 +73,12 @@ public interface UserRepository extends JpaRepository<User,Long> {
 
 	@Modifying
 	@Transactional
-	@Query(value = "UPDATE deletion_requests set account_deleted=?1,enabled=?2 WHERE phonenumber=?2", nativeQuery = true)
-	void addAccountToDeleteRequest(boolean deleted,boolean enabled,String phone);
+	@Query(value = "UPDATE user set account_deleted=false,enabled=false WHERE phonenumber=?1", nativeQuery = true)
+	void addAccountToDeleteRequest(String phone);
 	
 	@Modifying
 	@Transactional
-	@Query(value = "UPDATE deletion_requests set account_deleted=false,enabled=true WHERE phonenumber=?1", nativeQuery = true)
+	@Query(value = "UPDATE user set account_deleted=false,enabled=true WHERE phonenumber=?1", nativeQuery = true)
 	void recoverAccount(String phone);
 	
 }

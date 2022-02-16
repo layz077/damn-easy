@@ -2,6 +2,7 @@ package com.example.demo.repository;
 
 import java.sql.Date;
 import java.util.List;
+import java.util.Optional;
 
 import javax.transaction.Transactional;
 
@@ -22,5 +23,8 @@ public interface AccountDeletionRequestsRepository extends JpaRepository<Account
 	@Transactional
 	@Query(value="DELETE from deletion_requests WHERE permanent_delete_date=?1",nativeQuery = true)
 	void deleteEntry(Date date);
+
+	@Query(value = "SELECT * FROM deletion_requests WHERE mobile_number=?1",nativeQuery = true)
+	String getByPhone(String mobileNumber);
 	
 }

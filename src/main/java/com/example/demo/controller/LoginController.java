@@ -5,9 +5,11 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.example.demo.repository.AccountDeletionRequestsRepository;
 import org.json.JSONObject;
 import org.jboss.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.config.provisioning.UserDetailsManagerResourceFactoryBean;
@@ -27,42 +29,84 @@ import com.fasterxml.jackson.databind.util.JSONPObject;
 @RestController
 public class LoginController {
 	
-	private ObjectMapper objectMapper = new ObjectMapper();
-	private static Logger logger = Logger.getLogger(LoginController.class);
+	private final ObjectMapper objectMapper = new ObjectMapper();
+	private static final Logger logger = Logger.getLogger(LoginController.class);
 	@Autowired
 	private UserRepository userRepository;
+
+	@Autowired
+	private AccountDeletionRequestsRepository accountDeletionRequestsRepository;
 	
 	@Autowired
 	private SecurityConfig securityConfig;
-	private mailingService mailingService = new mailingService();
+	private final mailingService mailingService = new mailingService();
+	private ResponseEntity<?> response = null;
+
+    @Value("${example}")
+	private String example;
 
 	@PostMapping(value = "/user/login", consumes ="application/json",produces="application/json")
 	 public ResponseEntity<?> login(@RequestBody String input,HttpServletRequest request) throws Exception{
 
-        User user = objectMapper.readValue(input, User.class);
+	  try {
+		  User user = objectMapper.readValue(input, User.class);
 //        JSONObject json = new JSONObject();
-        
-        logger.info(user);
-        
-        String phoneNumber = user.getPhoneNumber();
-        
-        String fromDb = userRepository.getHash(phoneNumber);
-        String password = user.getPassword();
-        
-        boolean isPresent = securityConfig.passwordEncoder().matches(password, fromDb);
-        
-        if(!userRepository.getActive(phoneNumber)) return ResponseEntity.status(HttpStatus.OK).body("User in active / deleted");
-        if(isPresent) {
 
-        	String emailId = userRepository.getEmail(phoneNumber);
-        	userRepository.recoverAccount(phoneNumber);
-            userRepository.setLastIp(request.getRemoteAddr(), phoneNumber);
-        	
-        	mailingService.sendMail(emailId,"","","login",request);
-        	return ResponseEntity.status(HttpStatus.OK).body("Logged in");
-        }
-                
-		
-		return ResponseEntity.status(HttpStatus.OK).body("Enter a valid username or password");
+		  logger.info(example);
+		  String phoneNumber = user.getPhoneNumber();
+
+
+		  String password = user.getPassword();
+		  boolean isPresent = false;
+		  try {
+			  String fromDb = userRepository.getHash(phoneNumber);
+			  isPresent = securityConfig.passwordEncoder().matches(password, fromDb);
+		  } catch (Exception e) {
+			  logger.info("exception");
+		  }
+
+		  // First check if account is deleted
+		  // Check for null pointer exception here later
+		  if (userRepository.getIsDeleted(phoneNumber))
+			  return ResponseEntity.status(HttpStatus.OK).body("User not present");
+
+		  // Check if account is disabled (will make controller for disabling and enabling later)
+          if(!userRepository.getIsActive(phoneNumber)){
+			  if(accountDeletionRequestsRepository.getByPhone(phoneNumber)==null){
+				  return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Account disabled please click on the below link for enabling process\n"+
+						                                                      "http://localhost:8080/accountEnable/");
+			  }
+		  }
+
+		  if (userRepository.getByPhone(phoneNumber) != null) {
+
+			  if (isPresent) {
+
+				  String emailId = userRepository.getEmail(phoneNumber);
+				  userRepository.setLastIp(request.getRemoteAddr(), phoneNumber);
+				  logger.info(userRepository.getIsActive(phoneNumber));
+
+				  if (userRepository.getIsActive(phoneNumber)) {
+//					mailingService.sendMail(emailId, "", "", "login", request);
+					  response = ResponseEntity.status(HttpStatus.OK).body("Logged in");
+				  } else {
+//					mailingService.sendMail(emailId, "", "", "login recover", request);
+					  accountDeletionRequestsRepository.deleteById(phoneNumber);
+					  response = ResponseEntity.status(HttpStatus.OK).body("Account Recovered Successfully. Logged In");
+				  }
+
+				  userRepository.recoverAccount(phoneNumber);
+
+			  }
+		  } else {
+			  response = ResponseEntity.status(HttpStatus.OK).body("Enter a valid username or password");
+		  }
+
+	  }
+	  catch (Exception e){
+		  response = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Some error occurred while processing your request");
+		  e.printStackTrace();
+	  }
+		return response;
 	 }
 }
