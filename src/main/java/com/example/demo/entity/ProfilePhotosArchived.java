@@ -14,8 +14,8 @@ import java.sql.Date;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "profile_photos")
-public class ProfilePhotos {
+@Table(name = "profile_photos_archived")
+public class ProfilePhotosArchived {
 
     @Id
     @Column(name = "phonenumber")

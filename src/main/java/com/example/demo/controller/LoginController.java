@@ -2,10 +2,13 @@ package com.example.demo.controller;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.servlet.http.HttpServletRequest;
 
 import com.example.demo.repository.AccountDeletionRequestsRepository;
+import com.example.demo.repository.ProfilePhotosRepository;
+import com.example.demo.repository.UserRoleRepository;
 import org.json.JSONObject;
 import org.jboss.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +16,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.config.provisioning.UserDetailsManagerResourceFactoryBean;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -25,6 +29,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.JSONPObject;
+import org.springframework.web.servlet.ModelAndView;
 
 @RestController
 public class LoginController {
@@ -33,6 +38,10 @@ public class LoginController {
 	private static final Logger logger = Logger.getLogger(LoginController.class);
 	@Autowired
 	private UserRepository userRepository;
+	@Autowired
+	private ProfilePhotosRepository profileRepository;
+	@Autowired
+	private UserRoleRepository userRoleRepository;
 
 	@Autowired
 	private AccountDeletionRequestsRepository accountDeletionRequestsRepository;
@@ -70,7 +79,7 @@ public class LoginController {
 		  if (userRepository.getIsDeleted(phoneNumber))
 			  return ResponseEntity.status(HttpStatus.OK).body("User not present");
 
-		  // Check if account is disabled (will make controller for disabling and enabling later)
+		  // Check if account is disabled,  (will make controller for disabling and enabling later)
           if(!userRepository.getIsActive(phoneNumber)){
 			  if(accountDeletionRequestsRepository.getByPhone(phoneNumber)==null){
 				  return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Account disabled please click on the below link for enabling process\n"+
@@ -88,7 +97,8 @@ public class LoginController {
 
 				  if (userRepository.getIsActive(phoneNumber)) {
 //					mailingService.sendMail(emailId, "", "", "login", request);
-					  response = ResponseEntity.status(HttpStatus.OK).body("Logged in");
+					response = ResponseEntity.status(HttpStatus.OK).body("Logged in");
+
 				  } else {
 //					mailingService.sendMail(emailId, "", "", "login recover", request);
 					  accountDeletionRequestsRepository.deleteById(phoneNumber);
@@ -109,4 +119,31 @@ public class LoginController {
 	  }
 		return response;
 	 }
+
+
+
+
+//	 @GetMapping("/user/login=true")
+//	 public ModelAndView getData(String phoneNumber) {
+//
+//		 try {
+//
+//			 String role = userRoleRepository.getRole(phoneNumber);
+//			 String userDetails = userRepository.getForLogin(phoneNumber);
+//
+//			 try {
+//				 User user = objectMapper.readValue(userDetails, User.class);
+//			 } catch (JsonProcessingException e) {
+//				 e.printStackTrace();
+//			 }
+//
+//			 if(Objects.equals(role, "ROLE_USER")){
+//			 }
+//
+//			 return new ModelAndView("");
+//
+//		 } catch (Exception e) {
+//			 return new ModelAndView("500");
+//		 }
+//	 }
 }

@@ -66,16 +66,18 @@ public class WebService implements web{
     @Autowired
     private PostDetailsRepository postDetailsRepository;
 	@Autowired
-	private ProfileRepository profileRepository;
+	private ProfilePhotosRepository profileRepository;
+	@Autowired
+	private ProfilePhotosArchivedRepository profilePhotosArchivedRepository;
 
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private static ObjectMapper objectMapper = new ObjectMapper();
     
     @Autowired
     private UserRoleRepository userRoleRepository;
     @Autowired
     private AccountDeletionRequestsRepository accountDeletionRequestsRepository;
     
-    private mailingService mail = new mailingService();
+    private static mailingService mail = new mailingService();
 
 
     private final PhoneCheck phoneCheck = new PhoneCheck();
@@ -157,7 +159,7 @@ public class WebService implements web{
 								ImageIO.write(bufferedImage, "png", new File("D:\\images\\" + userName + ".png"));
 
 
-								ProfilePhotos profile = new ProfilePhotos(user.getUserId(), "D:\\images\\" + userName + ".png");
+								ProfilePhotos profile = new ProfilePhotos(user.getPhoneNumber(), "D:\\images\\" + userName + ".png",date,0);
 								profileRepository.saveAndFlush(profile);
 
 							} catch (IOException e) {
@@ -195,11 +197,11 @@ public class WebService implements web{
 	}
     }
     
-    public String updateProf(String input, HttpServletRequest httpRequest) {
+    public String updateProf(MultipartFile file ,String input, HttpServletRequest httpRequest) {
 		
     	
     	/*
-    	 * NAME and USERNAME
+    	 * NAME and USERNAME and profile photo
     	 * In client side on the update form previous details will be there already.
     	 * User will delete it and put new value which will come here.
     	 * So, if he only changes password previous name will come (Nothing blank will come)
@@ -230,7 +232,46 @@ public class WebService implements web{
 	    		String username = user.getUserName();
 	        	
 	        	logger.info(username);
-	    		
+
+				// Photo upload if present and also check if photo is updated or not
+
+				if(!file.isEmpty()){
+					ProfilePhotos photos;
+					BufferedImage bufferedImage = ImageIO.read(file.getInputStream());
+					ProfilePhotos profilePhotos  = profileRepository.details(phoneNumber);
+
+					if(profilePhotos!=null){
+
+						// Moving previous data to archive
+						profilePhotosArchivedRepository.insertData(profilePhotos.getPhoneNumber(),profilePhotos.getFileLocation(),profilePhotos.getUpdateCount(),profilePhotos.getUploadDate());
+
+						int count = profileRepository.countValue(phoneNumber);
+
+						if(count<1){
+
+							ImageIO.write(bufferedImage,"png", new File("D:\\images\\" + username +"new"+(count+1)+".png"));
+							photos = new ProfilePhotos(phoneNumber,"D:\\images\\" + username +"new"+(count+1)+ ".png",updatedOn,1);
+						}
+
+						else{
+
+							ImageIO.write(bufferedImage,"png", new File("D:\\images\\" + username +"new"+(count+1)+ ".png"));
+							photos = new ProfilePhotos(phoneNumber,"D:\\images\\" + username +"new"+(count+1)+ ".png",updatedOn,(count+1));
+
+						}
+					  }
+					  else {
+
+						ImageIO.write(bufferedImage,"png", new File("D:\\images\\" + username + ".png"));
+						photos = new ProfilePhotos(phoneNumber,"D:\\images\\" + username + ".png",updatedOn,0);
+					}
+
+					profileRepository.saveAndFlush(photos);
+				  }
+
+
+				// Other details upload
+
 		    		if(nameCheck.isValid(name)) {
 
 		    			if(username.equals(userRepository.getUsername(phoneNumber))){

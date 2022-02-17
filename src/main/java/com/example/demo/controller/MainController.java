@@ -21,20 +21,28 @@ public class MainController {
     private static final Logger logger = Logger.getLogger(MainController.class);
 
 
-    @PostMapping("/register")
+    @PostMapping(value = "/register",consumes = {"multipart/form-data"})
     public String register(@RequestPart("file") MultipartFile file,@RequestPart("details") @Valid String user, HttpServletRequest httpRequest){
 
-        if(Objects.equals(file.getContentType(), "image/png") || Objects.equals(file.getContentType(), "image/jpeg")){
-            return webService.registration(file,user,httpRequest);
-        }
-        return "Profile photo must be an image";
+//     if(!file.isEmpty()){
+//         if(!Objects.equals(file.getContentType(), "image/png") || !Objects.equals(file.getContentType(), "image/jpeg")){
+//             return "Profile photo must be an image";
+//         }
+//     }
+        return webService.registration(file,user,httpRequest);
 
     }
 
     
-    @PutMapping("/user/update")
-    public String updateProfile(@RequestBody String input, HttpServletRequest httpRequest) {
-    	return webService.updateProf(input,httpRequest);
+    @PutMapping(value = "/user/update",consumes = {"multipart/form-data"})
+    public String updateProfile(@RequestPart("file") MultipartFile image,@RequestPart("details") String input, HttpServletRequest httpRequest) {
+
+//        if(!image.isEmpty()){
+//            if(!Objects.equals(image.getContentType(), "image/png") || !Objects.equals(image.getContentType(), "image/jpeg")){
+//                return "Profile photo must be an image";
+//            }
+//        }
+    	return webService.updateProf(image,input,httpRequest);
     }
     
     @PostMapping("/user/changePassword")
@@ -62,14 +70,13 @@ public class MainController {
         return webService.recover(id);
     }
 
+
     @PostMapping(path="/test/image",consumes = {"multipart/form-data"})
     public String testImage(@RequestPart("file") MultipartFile image, @RequestPart("details") String dto){
 
-//        MultipartFile image =  dto.getFile();
-        logger.info(dto);
-       if(Objects.equals(image.getContentType(), "image/png") || Objects.equals(image.getContentType(), "image/jpeg")){
+//         MultipartFile image =  dto.getFile();
+           logger.info(dto);
            return webService.imageTest(image,dto);
+
        }
-        return "Profile photo must be an image";
-    }
 }
